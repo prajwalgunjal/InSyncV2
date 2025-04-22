@@ -1,0 +1,11 @@
+{
+  "runtimeOptions": {
+    "configProperties": {
+      "System.Globalization.Invariant": false
+    },
+    "framework": {
+      "name": "Microsoft.NETCore.App",
+      "version": "8.0.101" // Use your .NET version here
+    }
+  }
+}
