@@ -266,7 +266,7 @@ namespace RepositoryLayer.Services
                 string fromName = "InSync";
                 string userName = "amitkumarnayak40@gmail.com";
                 string fromAddress = "amitkumarnayak40@gmail.com";
-                string Password = "uefewqwrywfuosqh";
+                string Password = "";
                 string Host = "smtp.gmail.com";
                 int Port = 25;
                 string subject = "Your One-Time Password (OTP)";

@@ -95,8 +95,10 @@ namespace InSync
             options.UseSqlServer(builder.Configuration["ConnectionStrings:DefaultConnection"])); // Note: Ensure your config section is correct
             // Register Repositories
             builder.Services.AddTransient<IUserRepo, UserRepo>();
+            builder.Services.AddTransient<ITaskRepo, TaskRepo>();
             // Register Business Layer (e.g., IUserBusiness)
             builder.Services.AddTransient<IUserBusiness, UserBusiness>();
+            builder.Services.AddTransient<ITaskBusiness,TaskBusiness>();
 
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>

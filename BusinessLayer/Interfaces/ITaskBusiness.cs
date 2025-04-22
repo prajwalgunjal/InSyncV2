@@ -6,9 +6,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RepositoryLayer.Interface
+namespace BusinessLayer.Interfaces
 {
-    public interface ITaskRepo
+    public interface ITaskBusiness
     {
         public Task<ResponseModel<TaskMasterEntity>> CreateTask(TaskMasterEntity task);
     }

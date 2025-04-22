@@ -2,6 +2,7 @@
 using CommonLayer.ResponseModel;
 using RepositoryLayer.Context;
 using RepositoryLayer.Entity;
+using RepositoryLayer.Interface;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace RepositoryLayer.Services
 {
-    class TaskRepo
+    public class TaskRepo : ITaskRepo
     {
         private InSyncContext syncContext;
         public TaskRepo(InSyncContext syncContext)
