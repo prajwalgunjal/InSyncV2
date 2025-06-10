@@ -46,8 +46,8 @@ namespace RepositoryLayer.Services
 
                 var newEmployee = new EmployeeMasterEntity
                 {
-                    Name = employeeMasterModel.Name,
-                    UserName = employeeMasterModel.UserName,
+                    Name = employeeMasterModel.firstName + employeeMasterModel.lastName,
+                    UserName = employeeMasterModel.firstName,
                     PasswordHash = employeeMasterModel.Password, // You should hash the password before saving it
                     PhoneNumber = employeeMasterModel.PhoneNumber,
                     Email = employeeMasterModel.Email,

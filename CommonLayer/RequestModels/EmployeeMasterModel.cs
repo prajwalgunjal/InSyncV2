@@ -11,44 +11,45 @@ namespace CommonLayer.RequestModels
     {
         //[Required]
         //[StringLength(100)]
-        public string Name { get; set; }
-
+        public string Name { get; set; } = "";
+        public string firstName { get; set; } = "";
+        public string lastName { get; set; } = "";
         //[Required]
         //[StringLength(50)]
-        public string UserName { get; set; }
+        public string UserName { get; set; } = "";
 
         //[Required]
         //[StringLength(256)]
         public string Password { get; set; }  // This is the user's password (to be hashed in the backend)
 
         //[StringLength(15)]
-        public string PhoneNumber { get; set; }
+        public string PhoneNumber { get; set; } = "";
 
         //[StringLength(100)]
         //[EmailAddress]
         public string Email { get; set; }
 
         //[StringLength(50)]
-        public string Designation { get; set; }
+        public string Designation { get; set; } = "";
 
         //[Required]
         //[StringLength(20)]
-        public string EmployeeCode { get; set; }
+        public string EmployeeCode { get; set; } = "";
 
         //[StringLength(50)]
-        public string Department { get; set; }
+        public string Department { get; set; } = "";
 
         //[StringLength(50)]
-        public string OfficeLocation { get; set; }
+        public string OfficeLocation { get; set; } = "";
 
-        public int? ReportingManagerID { get; set; }
+        public int? ReportingManagerID { get; set; } = 0;
 
-        public int? TeamID { get; set; }
+        public int? TeamID { get; set; } = 0;
 
         //[Required]
-        public DateTime DateOfJoining { get; set; }
+        public DateTime DateOfJoining { get; set; } = DateTime.Now;
 
-        public bool IsHR { get; set; } = false;
+        public bool IsHR { get; set; } = false; 
         public bool IsCOO { get; set; } = false;
 
     }
