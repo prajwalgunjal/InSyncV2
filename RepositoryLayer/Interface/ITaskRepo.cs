@@ -1,4 +1,5 @@
-﻿using CommonLayer.ResponseModel;
+﻿using CommonLayer.RequestModels;
+using CommonLayer.ResponseModel;
 using RepositoryLayer.Entity;
 using System;
 using System.Collections.Generic;
@@ -11,5 +12,8 @@ namespace RepositoryLayer.Interface
     public interface ITaskRepo
     {
         public Task<ResponseModel<TaskMasterEntity>> CreateTask(TaskMasterEntity task);
+        Task<bool> SendToGoogleChatAsync(StatusUpdateRequest request, EmployeeMasterEntity Emp);
+        Task<bool> ScheduleTaskAsync(ScheduleTaskRequest request, EmployeeMasterEntity Emp);
+        Task<bool> SaveWebhooksURL(string url, EmployeeMasterEntity Emp);
     }
 }

@@ -1,4 +1,4 @@
-
+﻿
 using BusinessLayer.Interfaces;
 using BusinessLayer.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -50,7 +50,11 @@ namespace InSync
             ).EnableSensitiveDataLogging()  // Remove in production
             );
             // Add services to the container.
-
+            builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+    });
             builder.Services.AddControllers();
             // Configure Swagger/OpenAPI with JWT support
             builder.Services.AddSwaggerGen(c =>
@@ -98,7 +102,7 @@ namespace InSync
             builder.Services.AddTransient<ITaskRepo, TaskRepo>();
             // Register Business Layer (e.g., IUserBusiness)
             builder.Services.AddTransient<IUserBusiness, UserBusiness>();
-            builder.Services.AddTransient<ITaskBusiness,TaskBusiness>();
+            builder.Services.AddTransient<ITaskBusiness, TaskBusiness>();
 
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -117,6 +121,9 @@ namespace InSync
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddDistributedMemoryCache();
+            builder.Logging.ClearProviders();
+            builder.Logging.AddConsole(); // Logs in terminal
+            builder.Logging.AddDebug();   // Logs in Visual Studio debug output
             builder.Services.AddStackExchangeRedisCache(
             options =>
             {
@@ -135,6 +142,7 @@ namespace InSync
 
             app.UseHttpsRedirection();
             app.UseCors("AllowAngularApp");
+            app.UseAuthentication();
             app.UseAuthorization();
 
 

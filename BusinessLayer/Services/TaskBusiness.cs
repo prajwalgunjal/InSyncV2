@@ -1,4 +1,5 @@
 ﻿using BusinessLayer.Interfaces;
+using CommonLayer.RequestModels;
 using CommonLayer.ResponseModel;
 using RepositoryLayer.Entity;
 using RepositoryLayer.Interface;
@@ -21,5 +22,21 @@ namespace BusinessLayer.Services
         {
             return await taskRepository.CreateTask(task);
         }
-    }
+        public Task<bool> SendToGoogleChatAsync(StatusUpdateRequest request, EmployeeMasterEntity Emp)
+        {
+            return taskRepository.SendToGoogleChatAsync(request, Emp);
+        }
+        public Task<bool> ScheduleTaskAsync(ScheduleTaskRequest request, EmployeeMasterEntity Emp)
+        {
+            return taskRepository.ScheduleTaskAsync(request, Emp);
+        }
+       /* public Task SendMessageToGoogleChat(string messageText)
+        {
+            return taskRepository.SendMessageToGoogleChat(messageText);
+        }*/
+        public async Task<bool> SaveWebhooksURL(string url, EmployeeMasterEntity Emp)
+        {
+            return await taskRepository.SaveWebhooksURL(url, Emp);
+        }
+    }   
 }

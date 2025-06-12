@@ -12,6 +12,10 @@ namespace RepositoryLayer.Context
     {
         public DbSet<EmployeeMasterEntity> EmployeeMaster { get; set; }
         public DbSet<TaskMasterEntity> taskMasterEntities { get; set; }
+        public DbSet<TaskEntity> Task { get; set; }
+        public DbSet<ScheduledTaskEntity> ScheduledTask { get; set; }
+        public DbSet<GoogleChatLogEntity> GoogleChatLog { get; set; }
+        public DbSet<WebhooksEntity> Webhooks { get; set; }
         public InSyncContext(DbContextOptions<InSyncContext> options)
             : base(options)
         {

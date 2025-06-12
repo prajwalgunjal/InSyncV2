@@ -11,7 +11,7 @@ namespace CommonLayer.RequestModels
         public string Email { get; set; }
         public string Token { get; set; }
         public DateTime ExpiryDate { get; set; }
-        public int EmployeeID { get; set; }
+        public long EmployeeID { get; set; }
         public long OTP { get; set; }
     }
 }

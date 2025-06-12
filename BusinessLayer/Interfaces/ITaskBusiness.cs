@@ -1,4 +1,5 @@
-﻿using CommonLayer.ResponseModel;
+﻿using CommonLayer.RequestModels;
+using CommonLayer.ResponseModel;
 using RepositoryLayer.Entity;
 using System;
 using System.Collections.Generic;
@@ -11,5 +12,9 @@ namespace BusinessLayer.Interfaces
     public interface ITaskBusiness
     {
         public Task<ResponseModel<TaskMasterEntity>> CreateTask(TaskMasterEntity task);
+        Task<bool> SendToGoogleChatAsync(StatusUpdateRequest request, EmployeeMasterEntity emp);
+        Task<bool> ScheduleTaskAsync(ScheduleTaskRequest request, EmployeeMasterEntity employeeId);
+        /*Task SendMessageToGoogleChat(string messageText);*/
+        Task<bool> SaveWebhooksURL(string url, EmployeeMasterEntity Emp);
     }
 }

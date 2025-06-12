@@ -1,9 +1,12 @@
-﻿using BusinessLayer.Interfaces;
+﻿using Azure.Core;
+using BusinessLayer.Interfaces;
 using BusinessLayer.Services;
+using CommonLayer.RequestModels;
 using CommonLayer.ResponseModel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RepositoryLayer.Entity;
+using System.Security.Claims;
 
 namespace InSync.Controllers
 {
@@ -13,73 +16,173 @@ namespace InSync.Controllers
     {
         private ITaskBusiness taskBusiness;
         private IUserBusiness iUserBusiness;
-        private readonly ILogger<TaskController> logger;
+        private readonly ILogger<TaskController> _logger;
         public TaskController(ITaskBusiness taskBusiness, ILogger<TaskController> logger, IUserBusiness iUserBusiness)
         {
             this.taskBusiness = taskBusiness;
-            this.logger = logger;
+            this._logger = logger;
             this.iUserBusiness = iUserBusiness;
         }
+
+        // POST: api/CreateTask/SendToGoogleChat
         [Authorize]
-        [HttpPost]
-        [Route("CreateTask")]
-        public IActionResult CreateTask(TaskMasterEntity task)
+        [HttpPost("SendToGoogleChat")]
+        public async Task<IActionResult> SendToGoogleChat([FromBody] StatusUpdateRequest request)
         {
             try
             {
-                task.Employee = iUserBusiness.GetLoggedInUserDetails(HttpContext.User);
-                taskBusiness.CreateTask(task);
-                return Ok(new ResponseModel<string> { Success = true, Message = "Create Task Successfull", Data = "Create Task" });
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                // Extract logged-in user ID from claims
+                EmployeeMasterEntity Emp = GetLoggedInUserId();
+
+                var result = await taskBusiness.SendToGoogleChatAsync(request, Emp);
+
+                return Ok(new
+                {
+                    message = "Status sent to Google Chat successfully",
+                    processedTasks = request.Tasks?.Count ?? 0,
+                    messageTemplate = request.MessageTemplate,
+                    employeeId = Emp.EmployeeID,
+                    success = true
+                });
             }
             catch (Exception ex)
             {
-                logger.LogError(ex.ToString());
-                return BadRequest(ex.ToString());
+                _logger.LogError(ex, "Failed to send to Google Chat");
+                return StatusCode(500, new
+                {
+                    error = "Failed to send to Google Chat",
+                    message = ex.Message
+                });
+            }
+        }
+
+        // POST: api/CreateTask/ScheduleTask
+        [Authorize]
+        [HttpPost("ScheduleTask")]
+        public async Task<IActionResult> ScheduleTask([FromBody] ScheduleTaskRequest request)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                // Extract logged-in user ID from claims
+                var employeeId = GetLoggedInUserId();
+
+                var result = await taskBusiness.ScheduleTaskAsync(request, employeeId);
+
+                return Ok(new
+                {
+                    message = "Task scheduled successfully",
+                    scheduledTasks = request.ScheduledTasks?.Count ?? 0,
+                    employeeId = employeeId,
+                    success = true
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to schedule task");
+                return StatusCode(500, new
+                {
+                    error = "Failed to schedule task",
+                    message = ex.Message
+                });
+            }
+        }
+        // GET: api/CreateTask/GetTasksByEmployee
+        [Authorize]
+        [HttpGet("GetTasksByEmployee")]
+        public async Task<IActionResult> GetTasksByEmployee()
+        {
+            try
+            {
+                var employeeId = GetLoggedInUserId();
+
+                // Implementation can be added to service if needed
+                return Ok(new
+                {
+                    message = "Feature can be implemented to get tasks",
+                    employeeId = employeeId
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to get tasks");
+                return StatusCode(500, new { error = "Failed to retrieve tasks", message = ex.Message });
             }
         }
         [Authorize]
-        [HttpPost]
-        [Route("UpdateTask")]
-        public IActionResult UpdateTask()
+        [HttpPost("SaveWebhooksURL")]
+        public async Task<IActionResult> SaveWebhooksURL([FromBody] WebhooksUrlRequestModel webhooksUrl)
         {
             try
             {
-                return Ok(new ResponseModel<string> { Success = true, Message = "Create Task Successfull", Data = "Create Task" });
+                if (webhooksUrl.WebhookUrl != null)
+                {
+                    var employee = GetLoggedInUserId();
+                    var result = await taskBusiness.SaveWebhooksURL(webhooksUrl.WebhookUrl, employee);
+
+                    return Ok(new
+                    {
+                        message = "Webhooks URL saved successfully",
+                        webhooksUrl = webhooksUrl,
+                        employeeId = employee.EmployeeID
+                    });
+                }
+                return BadRequest(new { error = "Webhooks URL cannot be null or empty" });
             }
             catch (Exception ex)
             {
-                logger.LogError(ex.ToString());
-                return BadRequest(ex.ToString());
+                _logger.LogError(ex, "Failed to save webhooks URL");
+                return StatusCode(500, new { error = "Failed to save webhooks URL", message = ex.Message });
             }
         }
+
+        // GET: api/CreateTask/GetScheduledTasks
         [Authorize]
-        [HttpPost]
-        [Route("DeleteTask")]
-        public IActionResult DeleteTask()
+        [HttpGet("GetScheduledTasks")]
+        public async Task<IActionResult> GetScheduledTasks()
         {
             try
             {
-                return Ok(new ResponseModel<string> { Success = true, Message = "Create Task Successfull", Data = "Create Task" });
+                var employeeId = GetLoggedInUserId();
+
+                // Implementation can be added to service if needed
+                return Ok(new
+                {
+                    message = "Feature can be implemented to get scheduled tasks",
+                    employeeId = employeeId
+                });
             }
             catch (Exception ex)
             {
-                logger.LogError(ex.ToString());
-                return BadRequest(ex.ToString());
+                _logger.LogError(ex, "Failed to get scheduled tasks");
+                return StatusCode(500, new { error = "Failed to retrieve scheduled tasks", message = ex.Message });
             }
         }
-        [Authorize]
-        [HttpPost]
-        [Route("ViewAllTasks")]
-        public IActionResult ViewAllTasks()
+        private EmployeeMasterEntity GetLoggedInUserId()
         {
             try
             {
-                return Ok(new ResponseModel<string> { Success = true, Message = "Create Task Successfull", Data = "Create Task" });
+                // Method 1: Using your existing business logic
+                var userDetails = iUserBusiness.GetLoggedInUserDetails(HttpContext.User);
+                if(userDetails!= null)
+                {
+                    return userDetails;
+                }
+                throw new UnauthorizedAccessException("User ID not found in claims");
             }
             catch (Exception ex)
             {
-                logger.LogError(ex.ToString());
-                return BadRequest(ex.ToString());
+                _logger.LogError(ex, "Failed to extract user ID from claims");
+                throw new UnauthorizedAccessException("Unable to identify logged-in user");
             }
         }
     }
