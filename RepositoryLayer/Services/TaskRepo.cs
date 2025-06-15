@@ -266,7 +266,7 @@ namespace RepositoryLayer.Services
             }
             return false;
         }
-        public async Task<bool> SendMessageToGoogleChat_New(string messageText, EmployeeMasterEntity emp)
+        /*public async Task<bool> SendMessageToGoogleChat_New(string messageText, EmployeeMasterEntity emp)
         {
             try
             {
@@ -304,6 +304,129 @@ namespace RepositoryLayer.Services
             catch (Exception)
             {}
             return false;
+        }*/
+
+        // Alternative method using Cards V2 (newer format)
+        public async Task<bool> SendMessageToGoogleChat_New(string messageText, EmployeeMasterEntity emp)
+        {
+            try
+            {
+                var Webhooks = syncContext.Webhooks.FirstOrDefault(w => Convert.ToInt32(w.EmployeeID) == (emp.EmployeeID));
+                if (!string.IsNullOrEmpty(Webhooks.WebhooksURL))
+                {
+                    var client = new RestClient();
+                    var request = new RestRequest(Webhooks.WebhooksURL, Method.Post);
+                    request.AddHeader("Content-Type", "application/json; charset=UTF-8");
+
+                    // Cards V2 format with custom sender
+                    var message = new
+                    {
+                        cardsV2 = new object[]
+                        {
+                    new
+                    {
+                        cardId = "daily-update-card",
+                        card = new
+                        {
+                            header = new
+                            {
+                                title = emp.Name ?? "Employee Update",
+                                subtitle = $"ID: {emp.EmployeeID}",
+                                imageUrl = GetEmployeeAvatarUrl(emp), // Method to get employee avatar
+                                imageType = "CIRCLE"
+                            },
+                            sections = new object[]
+                            {
+                                new
+                                {
+                                    header = "📋 Daily Update",
+                                    widgets = new object[]
+                                    {
+                                        new
+                                        {
+                                            textParagraph = new
+                                            {
+                                                text = $"<b>Status Update:</b><br>{messageText}"
+                                            }
+                                        },
+                                        new
+                                        {
+                                            decoratedText = new
+                                            {
+                                                startIcon = new
+                                                {
+                                                    knownIcon = "CLOCK"
+                                                },
+                                                text = $"<b>Time:</b> {DateTime.Now:yyyy-MM-dd HH:mm:ss}"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                        }
+                    };
+
+                    request.AddJsonBody(message);
+
+                    try
+                    {
+                        var response = client.Execute(request);
+                        if (response.IsSuccessful)
+                        {
+                            Console.WriteLine("Message sent successfully!");
+                            return true;
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Failed to send message. Status code: {response.StatusCode}, Response: {response.Content}");
+                        }
+                        return false;
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error sending message: {ex.Message}");
+                        return false;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"General error: {ex.Message}");
+            }
+            return false;
+        }
+
+        // Method to get employee avatar URL
+        private string GetEmployeeAvatarUrl(EmployeeMasterEntity emp)
+        {
+            /*// Option 1: Use stored employee photo
+            if (!string.IsNullOrEmpty(emp.PhotoUrl))
+            {
+                return emp.PhotoUrl;
+            }
+*/
+            // Option 2: Use Gravatar based on email
+            if (!string.IsNullOrEmpty(emp.Email))
+            {
+                var emailHash = GetMD5Hash(emp.Email.ToLower().Trim());
+                return $"https://www.gravatar.com/avatar/{emailHash}?d=identicon&s=200";
+            }
+
+            // Option 3: Use default avatar with initials
+            return $"https://ui-avatars.com/api/?name={Uri.EscapeDataString(emp.Name ?? "User")}&background=0D8ABC&color=fff&size=200";
+        }
+
+        // Helper method for MD5 hash (for Gravatar)
+        private string GetMD5Hash(string input)
+        {
+            using (var md5 = System.Security.Cryptography.MD5.Create())
+            {
+                var inputBytes = System.Text.Encoding.ASCII.GetBytes(input);
+                var hashBytes = md5.ComputeHash(inputBytes);
+                return Convert.ToHexString(hashBytes).ToLower();
+            }
         }
         public static void sendTelegram(string SendMessage, EmployeeMasterEntity emp)
         {
