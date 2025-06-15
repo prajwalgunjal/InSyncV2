@@ -14,6 +14,7 @@ namespace RepositoryLayer.Interface
         public Task<ResponseModel<TaskMasterEntity>> CreateTask(TaskMasterEntity task);
         Task<bool> SendToGoogleChatAsync(StatusUpdateRequest request, EmployeeMasterEntity Emp);
         Task<bool> ScheduleTaskAsync(ScheduleTaskRequest request, EmployeeMasterEntity Emp);
-        Task<bool> SaveWebhooksURL(string url, EmployeeMasterEntity Emp);
+        Task<bool> SaveWebhooksURL(WebhooksUrlRequestModel webhooks, EmployeeMasterEntity Emp);
+        Task<ResponseModel<List<string>>> GetWebhooks(EmployeeMasterEntity emp);
     }
 }

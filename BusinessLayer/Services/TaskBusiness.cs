@@ -34,9 +34,13 @@ namespace BusinessLayer.Services
         {
             return taskRepository.SendMessageToGoogleChat(messageText);
         }*/
-        public async Task<bool> SaveWebhooksURL(string url, EmployeeMasterEntity Emp)
+        public async Task<bool> SaveWebhooksURL(WebhooksUrlRequestModel webhooks, EmployeeMasterEntity Emp)
         {
-            return await taskRepository.SaveWebhooksURL(url, Emp);
+            return await taskRepository.SaveWebhooksURL(webhooks, Emp);
+        }
+        public async Task<ResponseModel<List<string>>> GetWebhooks(EmployeeMasterEntity emp)
+        {
+            return await taskRepository.GetWebhooks(emp);
         }
     }   
 }

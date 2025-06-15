@@ -124,10 +124,10 @@ namespace InSync.Controllers
         {
             try
             {
-                if (webhooksUrl.WebhookUrl != null)
+                if (webhooksUrl.Url != null)
                 {
                     var employee = GetLoggedInUserId();
-                    var result = await taskBusiness.SaveWebhooksURL(webhooksUrl.WebhookUrl, employee);
+                    var result = await taskBusiness.SaveWebhooksURL(webhooksUrl, employee);
 
                     return Ok(new
                     {
@@ -136,6 +136,34 @@ namespace InSync.Controllers
                         employeeId = employee.EmployeeID
                     });
                 }
+                return BadRequest(new { error = "Webhooks URL cannot be null or empty" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to save webhooks URL");
+                return StatusCode(500, new { error = "Failed to save webhooks URL", message = ex.Message });
+            }
+        }
+
+        [Authorize]
+        [HttpGet("GetWebhooks")]
+        public async Task<IActionResult> GetWebhooks()
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+                var employee = GetLoggedInUserId();
+                var result = await taskBusiness.GetWebhooks(employee);
+
+                return Ok(new
+                {
+                    message = "Webhooks URL saved successfully",
+                    webhooksUrl = result.Data[0],
+                    employeeId = employee.EmployeeID
+                });
                 return BadRequest(new { error = "Webhooks URL cannot be null or empty" });
             }
             catch (Exception ex)
@@ -173,7 +201,7 @@ namespace InSync.Controllers
             {
                 // Method 1: Using your existing business logic
                 var userDetails = iUserBusiness.GetLoggedInUserDetails(HttpContext.User);
-                if(userDetails!= null)
+                if (userDetails != null)
                 {
                     return userDetails;
                 }

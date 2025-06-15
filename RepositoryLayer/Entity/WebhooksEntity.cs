@@ -11,6 +11,7 @@ namespace RepositoryLayer.Entity
     {
         [Key]
         public int WebhookID { get; set; }
+        public string WebhookName { get; set; }
 
         [Required]
         [StringLength(500)]

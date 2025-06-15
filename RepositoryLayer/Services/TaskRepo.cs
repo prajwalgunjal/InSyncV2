@@ -7,7 +7,9 @@ using RepositoryLayer.Interface;
 using RestSharp;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -85,7 +87,52 @@ namespace RepositoryLayer.Services
                 await syncContext.SaveChangesAsync();
             }
         }
-        public async Task<bool> SaveWebhooksURL(string url , EmployeeMasterEntity Emp)
+        public async Task<ResponseModel<List<string>>> GetWebhooks(EmployeeMasterEntity emp)
+        {
+            try
+            {
+                if (emp is not null && emp.EmployeeID > 0)
+                {
+                    var webhooks = syncContext.Webhooks
+                        .Where(w => w.EmployeeID == emp.EmployeeID && w.IsActive && !w.IsDeleted)
+                        .Select(w => w.WebhooksURL)
+                        .ToList();
+                    if (webhooks.Any())
+                    {
+                        return new ResponseModel<List<string>>
+                        {
+                            Success = true,
+                            Message = "Webhooks retrieved successfully",
+                            Data = webhooks
+                        };
+                    }
+                    else
+                    {
+                        return new ResponseModel<List<string>>
+                        {
+                            Success = false,
+                            Message = "No active webhooks found for this employee",
+                            Data = null
+                        };
+                    }
+                }
+                else
+                {
+                    return new ResponseModel<List<string>>
+                    {
+                        Success = false,
+                        Message = "Invalid employee details provided",
+                        Data = null
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+
+            }
+            return null;
+        }
+        public async Task<bool> SaveWebhooksURL(WebhooksUrlRequestModel webhooks , EmployeeMasterEntity Emp)
         {
             try
             {
@@ -94,13 +141,14 @@ namespace RepositoryLayer.Services
                     .FirstOrDefault(e => e.UserName == Emp.UserName || e.Email == Emp.Email);
                 if (existingEmployee != null)
                 {
-                    if (string.IsNullOrEmpty(url))
+                    if (string.IsNullOrEmpty(webhooks.Url))
                     {
                         throw new ArgumentException("Webhooks URL cannot be null or empty");
                     }
                     WebhooksEntity webhooksEntity = new WebhooksEntity
                     {
-                        WebhooksURL = url,
+                        WebhooksURL = webhooks.Url,
+                        WebhookName = webhooks.Name,
                         EmployeeID = Emp.EmployeeID,
                         CreatedDate = DateTime.Now,
                         UpdatedDate = DateTime.Now,
@@ -220,38 +268,73 @@ namespace RepositoryLayer.Services
         }
         public async Task<bool> SendMessageToGoogleChat_New(string messageText, EmployeeMasterEntity emp)
         {
-            var Webhooks = syncContext.Webhooks.FirstOrDefault(w => Convert.ToInt32(w.EmployeeID) == (emp.EmployeeID));
-            if (!string.IsNullOrEmpty(Webhooks.WebhooksURL))
+            try
             {
-                //string url = "https://chat.googleapis.com/v1/spaces/AAAA_IKzwCI/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=UyRJ-aPa1hZieISMW9CgfPhsjonluBUz6X_RA4x_Ipo";
-                var client = new RestClient();
-                var request = new RestRequest(Webhooks.WebhooksURL, Method.Post);
-                request.AddHeader("Content-Type", "application/json; charset=UTF-8");
-                var message = new { text = messageText };
-                request.AddJsonBody(message); // Automatically serializes to JSON
-                try
+                var Webhooks = syncContext.Webhooks.FirstOrDefault(w => Convert.ToInt32(w.EmployeeID) == (emp.EmployeeID));
+                if (!string.IsNullOrEmpty(Webhooks.WebhooksURL))
                 {
-                    // Send the request
-                    var response = client.Execute(request);
+                    var client = new RestClient();
+                    var request = new RestRequest(Webhooks.WebhooksURL, Method.Post);
+                    request.AddHeader("Content-Type", "application/json; charset=UTF-8");
+                    var message = new { text = messageText };
+                    request.AddJsonBody(message); // Automatically serializes to JSON
+                    try
+                    {
+                        // Send the request
+                        var response = client.Execute(request);
 
-                    // Check if the response is successful
-                    if (response.IsSuccessful)
-                    {
-                        Console.WriteLine("Message sent successfully!");
-                        return true;
+                        // Check if the response is successful
+                        if (response.IsSuccessful)
+                        {
+                            Console.WriteLine("Message sent successfully!");
+                            return true;
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Failed to send message. Status code: {response.StatusCode}, Response: {response.Content}");
+                        }
+                        return false;
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        Console.WriteLine($"Failed to send message. Status code: {response.StatusCode}, Response: {response.Content}");
+                        return false;
                     }
-                    return false;
-                }
-                catch (Exception ex)
-                {
-                    return false;
                 }
             }
+            catch (Exception)
+            {}
             return false;
+        }
+        public static void sendTelegram(string SendMessage, EmployeeMasterEntity emp)
+        {
+            try
+            {
+                string token = "";
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+                SendMessage = SendMessage.Replace("_", "\\_");
+                string ChannelName = "@lPrajwaltest";
+                if (Debugger.IsAttached)
+                {
+                    SendMessage = "It's From local pc , " + SendMessage;
+                }
+                var client = new RestClient();
+                //client.Timeout = -1;
+                var request = new RestRequest($"https://api.telegram.org/{token}/sendMessage", Method.Post);
+                var obj = new
+                {
+                    chat_id = ChannelName,
+                    text = SendMessage
+                };
+                request.AddJsonBody(obj);
+                request.AddQueryParameter("parse_mode", "markdown");
+                var response = client.Execute(request);
+                //Console.WriteLine(response.Content);
+                Console.WriteLine(SendMessage);
+            }
+            catch (Exception ex)
+            {
+
+            }
         }
     }
 }
