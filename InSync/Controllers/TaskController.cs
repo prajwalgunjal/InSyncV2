@@ -161,7 +161,7 @@ namespace InSync.Controllers
                 return Ok(new
                 {
                     message = "Webhooks URL saved successfully",
-                    webhooksUrl = result.Data[0],
+                    webhooksUrl = result.Data,
                     employeeId = employee.EmployeeID
                 });
                 return BadRequest(new { error = "Webhooks URL cannot be null or empty" });

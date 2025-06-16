@@ -16,6 +16,6 @@ namespace BusinessLayer.Interfaces
         Task<bool> ScheduleTaskAsync(ScheduleTaskRequest request, EmployeeMasterEntity employeeId);
         /*Task SendMessageToGoogleChat(string messageText);*/
         Task<bool> SaveWebhooksURL(WebhooksUrlRequestModel webhooks, EmployeeMasterEntity Emp);
-        Task<ResponseModel<List<string>>> GetWebhooks(EmployeeMasterEntity emp);
+        Task<ResponseModel<List<WebhooksUrlRequestModel>>> GetWebhooks(EmployeeMasterEntity emp);
     }
 }

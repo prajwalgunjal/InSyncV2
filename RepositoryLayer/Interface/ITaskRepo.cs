@@ -15,6 +15,6 @@ namespace RepositoryLayer.Interface
         Task<bool> SendToGoogleChatAsync(StatusUpdateRequest request, EmployeeMasterEntity Emp);
         Task<bool> ScheduleTaskAsync(ScheduleTaskRequest request, EmployeeMasterEntity Emp);
         Task<bool> SaveWebhooksURL(WebhooksUrlRequestModel webhooks, EmployeeMasterEntity Emp);
-        Task<ResponseModel<List<string>>> GetWebhooks(EmployeeMasterEntity emp);
+        Task<ResponseModel<List<WebhooksUrlRequestModel>>> GetWebhooks(EmployeeMasterEntity emp);
     }
 }

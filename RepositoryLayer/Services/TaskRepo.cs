@@ -87,19 +87,19 @@ namespace RepositoryLayer.Services
                 await syncContext.SaveChangesAsync();
             }
         }
-        public async Task<ResponseModel<List<string>>> GetWebhooks(EmployeeMasterEntity emp)
+        public async Task<ResponseModel<List<WebhooksUrlRequestModel>>> GetWebhooks(EmployeeMasterEntity emp)
         {
             try
             {
                 if (emp is not null && emp.EmployeeID > 0)
                 {
                     var webhooks = syncContext.Webhooks
-                        .Where(w => w.EmployeeID == emp.EmployeeID && w.IsActive && !w.IsDeleted)
-                        .Select(w => w.WebhooksURL)
-                        .ToList();
+    .Where(w => w.EmployeeID == emp.EmployeeID && w.IsActive && !w.IsDeleted)
+    .Select(w => new WebhooksUrlRequestModel { Url = w.WebhooksURL, Name = w.WebhookName })
+    .ToList();
                     if (webhooks.Any())
                     {
-                        return new ResponseModel<List<string>>
+                        return new ResponseModel<List<WebhooksUrlRequestModel>>
                         {
                             Success = true,
                             Message = "Webhooks retrieved successfully",
@@ -108,7 +108,7 @@ namespace RepositoryLayer.Services
                     }
                     else
                     {
-                        return new ResponseModel<List<string>>
+                        return new ResponseModel<List<WebhooksUrlRequestModel>>
                         {
                             Success = false,
                             Message = "No active webhooks found for this employee",
@@ -118,7 +118,7 @@ namespace RepositoryLayer.Services
                 }
                 else
                 {
-                    return new ResponseModel<List<string>>
+                    return new ResponseModel<List<WebhooksUrlRequestModel>>
                     {
                         Success = false,
                         Message = "Invalid employee details provided",

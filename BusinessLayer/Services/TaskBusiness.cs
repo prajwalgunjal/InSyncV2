@@ -38,7 +38,7 @@ namespace BusinessLayer.Services
         {
             return await taskRepository.SaveWebhooksURL(webhooks, Emp);
         }
-        public async Task<ResponseModel<List<string>>> GetWebhooks(EmployeeMasterEntity emp)
+        public async Task<ResponseModel<List<WebhooksUrlRequestModel>>> GetWebhooks(EmployeeMasterEntity emp)
         {
             return await taskRepository.GetWebhooks(emp);
         }
