@@ -26,6 +26,10 @@ namespace BusinessLayer.Services
         {
             return taskRepository.SendToGoogleChatAsync(request, Emp);
         }
+        public Task<bool> SendToTelegramAsync(StatusUpdateRequest request, EmployeeMasterEntity Emp)
+        {
+            return taskRepository.SendToTelegramAsync(request, Emp);
+        }
         public Task<bool> ScheduleTaskAsync(ScheduleTaskRequest request, EmployeeMasterEntity Emp)
         {
             return taskRepository.ScheduleTaskAsync(request, Emp);
@@ -38,9 +42,17 @@ namespace BusinessLayer.Services
         {
             return await taskRepository.SaveWebhooksURL(webhooks, Emp);
         }
+        public async Task<bool> SaveTelegramConfig(TelegramWebhookRequest webhooks, EmployeeMasterEntity Emp)
+        {
+            return await taskRepository.SaveTelegramConfig(webhooks, Emp);
+        }
         public async Task<ResponseModel<List<WebhooksUrlRequestModel>>> GetWebhooks(EmployeeMasterEntity emp)
         {
             return await taskRepository.GetWebhooks(emp);
+        }
+        public async Task<ResponseModel<List<TelegramWebhookRequest>>> GetTelegramConfig(EmployeeMasterEntity emp)
+        {
+            return await taskRepository.GetTelegramConfig(emp);
         }
     }   
 }

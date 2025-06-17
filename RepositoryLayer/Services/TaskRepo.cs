@@ -87,6 +87,55 @@ namespace RepositoryLayer.Services
                 await syncContext.SaveChangesAsync();
             }
         }
+        public async Task<bool> SendToTelegramAsync(StatusUpdateRequest request, EmployeeMasterEntity Emp)
+        {
+            var chatLog = new TelegramTokenLogEntity
+            {
+                MessageTemplate = request.MessageTemplate,
+                FormattedMessage = request.FormattedMessage,
+                TaskCount = request.Tasks?.Count ?? 0,
+                EmployeeID = Emp.EmployeeID,
+                IsSuccessful = false,
+                CreatedDate = DateTime.Now,
+                SentDate = DateTime.Now
+            };
+
+            try
+            {
+                // Create new tasks from the request
+                var iscreated = await CreateTasksFromRequest(request, Emp);
+                if (iscreated)
+                {
+                    // Send to Google Chat using the provided formatted message
+                    var ispushedonTelegram = await SendToTelegramAsync(request.FormattedMessage, Emp);
+                    if (ispushedonTelegram)
+                    {
+                        // Mark as successful
+                        chatLog.IsSuccessful = true;
+                        chatLog.ErrorMessage = "";
+
+                        _logger.LogInformation($"Successfully sent status update to Google Chat for Employee {Emp.EmployeeID}");
+                        return true;
+                    }
+                }
+                chatLog.ErrorMessage = "Failed to create tasks from request";
+                _logger.LogWarning($"Failed to create tasks for Employee {Emp.EmployeeID}");
+                return false;
+                
+            }
+            catch (Exception ex)
+            {
+                chatLog.ErrorMessage = ex.Message;
+                _logger.LogError(ex, $"Failed to send status update to Google Chat for Employee {Emp.EmployeeID}");
+                throw;
+            }
+            finally
+            {
+                // Always log the attempt
+                syncContext.TelegramTokenLog.Add(chatLog);
+                await syncContext.SaveChangesAsync();
+            }
+        }
         public async Task<ResponseModel<List<WebhooksUrlRequestModel>>> GetWebhooks(EmployeeMasterEntity emp)
         {
             try
@@ -119,6 +168,51 @@ namespace RepositoryLayer.Services
                 else
                 {
                     return new ResponseModel<List<WebhooksUrlRequestModel>>
+                    {
+                        Success = false,
+                        Message = "Invalid employee details provided",
+                        Data = null
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+
+            }
+            return null;
+        }
+        public async Task<ResponseModel<List<TelegramWebhookRequest>>> GetTelegramConfig(EmployeeMasterEntity emp)
+        {
+            try
+            {
+                if (emp is not null && emp.EmployeeID > 0)
+                {
+                    var webhooks = syncContext.TelegramToken
+    .Where(w => w.EmployeeID == emp.EmployeeID && w.IsActive && !w.IsDeleted)
+    .Select(w => new TelegramWebhookRequest { telegramToken = w.TokenName, channelName= w.ChannelName })
+    .ToList();
+                    if (webhooks.Any())
+                    {
+                        return new ResponseModel<List<TelegramWebhookRequest>>
+                        {
+                            Success = true,
+                            Message = "Webhooks retrieved successfully",
+                            Data = webhooks
+                        };
+                    }
+                    else
+                    {
+                        return new ResponseModel<List<TelegramWebhookRequest>>
+                        {
+                            Success = false,
+                            Message = "No active webhooks found for this employee",
+                            Data = null
+                        };
+                    }
+                }
+                else
+                {
+                    return new ResponseModel<List<TelegramWebhookRequest>>
                     {
                         Success = false,
                         Message = "Invalid employee details provided",
@@ -171,6 +265,45 @@ namespace RepositoryLayer.Services
 
                 throw;
             }
+        }
+        public async Task<bool> SaveTelegramConfig(TelegramWebhookRequest webhooks , EmployeeMasterEntity Emp)
+        {
+            try
+            {
+                // check the user is valid 
+                var existingEmployee = syncContext.EmployeeMaster
+                    .FirstOrDefault(e => e.UserName == Emp.UserName || e.Email == Emp.Email);
+                if (existingEmployee != null)
+                {
+                    if (string.IsNullOrEmpty(webhooks.telegramToken))
+                    {
+                        throw new ArgumentException("Telegram Token cannot be null or empty");
+                    }
+                    TelegramTokenEntity webhooksEntity = new TelegramTokenEntity
+                    {
+                        TokenName = webhooks.telegramToken,
+                        ChannelName = webhooks.channelName,
+                        EmployeeID = Emp.EmployeeID,
+                        CreatedDate = DateTime.Now,
+                        UpdatedDate = DateTime.Now,
+                        IsActive = true,
+                        IsDeleted = false
+                    };
+                    syncContext.TelegramToken.Add(webhooksEntity);
+                    await syncContext.SaveChangesAsync();
+                    _logger.LogInformation($"Telegram Tokens saved successfully for Employee {Emp.EmployeeID}");
+                    return true;
+                }
+                else
+                {
+                    _logger.LogWarning($"Employee not found for UserName: {Emp.UserName} or Email: {Emp.Email}");
+                    throw new ArgumentException("Invalid employee details provided");
+                }
+            }
+            catch (Exception ex)
+            {
+            }
+            return false;
         }
 
         public async Task<bool> ScheduleTaskAsync(ScheduleTaskRequest request, EmployeeMasterEntity Emp)
@@ -428,35 +561,36 @@ namespace RepositoryLayer.Services
                 return Convert.ToHexString(hashBytes).ToLower();
             }
         }
-        public static void sendTelegram(string SendMessage, EmployeeMasterEntity emp)
+        public async Task<bool> SendToTelegramAsync(string sendMessage, EmployeeMasterEntity emp)
         {
             try
             {
-                string token = "";
+                var TokenDetails = syncContext.TelegramToken.FirstOrDefault(w => Convert.ToInt32(w.EmployeeID) == (emp.EmployeeID));
+
+                //string token = "8160930337:AAHZ4ZqrBkTaFvfAUmsMfL0OXbrMIzBOZaI"; // move this to config
+                //string channelName = "@PekkaOfficeDiary"; // move this to config
                 ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
-                SendMessage = SendMessage.Replace("_", "\\_");
-                string ChannelName = "@lPrajwaltest";
-                if (Debugger.IsAttached)
+                sendMessage = sendMessage.Replace("_", "\\_");
+                /*if (Debugger.IsAttached)
                 {
-                    SendMessage = "It's From local pc , " + SendMessage;
-                }
+                    sendMessage = "It's From local PC, " + sendMessage;
+                }*/
                 var client = new RestClient();
-                //client.Timeout = -1;
-                var request = new RestRequest($"https://api.telegram.org/{token}/sendMessage", Method.Post);
-                var obj = new
+                var request = new RestRequest($"https://api.telegram.org/bot{TokenDetails.TokenName}/sendMessage", Method.Post);
+                request.AddQueryParameter("parse_mode", "Markdown");
+                request.AddJsonBody(new
                 {
-                    chat_id = ChannelName,
-                    text = SendMessage
-                };
-                request.AddJsonBody(obj);
-                request.AddQueryParameter("parse_mode", "markdown");
-                var response = client.Execute(request);
-                //Console.WriteLine(response.Content);
-                Console.WriteLine(SendMessage);
+                    chat_id = TokenDetails.ChannelName,
+                    text = sendMessage
+                });
+                var response = await client.ExecuteAsync(request);
+
+                return response.IsSuccessful;
             }
             catch (Exception ex)
             {
-
+                // Log ex if needed
+                return false;
             }
         }
     }

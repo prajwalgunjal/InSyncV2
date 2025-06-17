@@ -13,8 +13,11 @@ namespace RepositoryLayer.Interface
     {
         public Task<ResponseModel<TaskMasterEntity>> CreateTask(TaskMasterEntity task);
         Task<bool> SendToGoogleChatAsync(StatusUpdateRequest request, EmployeeMasterEntity Emp);
+        Task<bool> SendToTelegramAsync(StatusUpdateRequest request, EmployeeMasterEntity Emp);
         Task<bool> ScheduleTaskAsync(ScheduleTaskRequest request, EmployeeMasterEntity Emp);
         Task<bool> SaveWebhooksURL(WebhooksUrlRequestModel webhooks, EmployeeMasterEntity Emp);
+        Task<bool> SaveTelegramConfig(TelegramWebhookRequest webhooks, EmployeeMasterEntity Emp);
         Task<ResponseModel<List<WebhooksUrlRequestModel>>> GetWebhooks(EmployeeMasterEntity emp);
+        Task<ResponseModel<List<TelegramWebhookRequest>>> GetTelegramConfig(EmployeeMasterEntity emp);
     }
 }

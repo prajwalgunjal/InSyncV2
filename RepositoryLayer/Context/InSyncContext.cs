@@ -16,6 +16,8 @@ namespace RepositoryLayer.Context
         public DbSet<ScheduledTaskEntity> ScheduledTask { get; set; }
         public DbSet<GoogleChatLogEntity> GoogleChatLog { get; set; }
         public DbSet<WebhooksEntity> Webhooks { get; set; }
+        public DbSet<TelegramTokenEntity> TelegramToken { get; set; }
+        public DbSet<TelegramTokenLogEntity> TelegramTokenLog { get; set; }
         public InSyncContext(DbContextOptions<InSyncContext> options)
             : base(options)
         {

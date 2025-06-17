@@ -60,6 +60,41 @@ namespace InSync.Controllers
                 });
             }
         }
+        [Authorize]
+        [HttpPost("SendToTelegram")]
+        public async Task<IActionResult> SendToTelegram([FromBody] StatusUpdateRequest request)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                // Extract logged-in user ID from claims
+                EmployeeMasterEntity Emp = GetLoggedInUserId();
+
+                var result = await taskBusiness.SendToTelegramAsync(request, Emp);
+
+                return Ok(new
+                {
+                    message = "Status sent to Google Chat successfully",
+                    processedTasks = request.Tasks?.Count ?? 0,
+                    messageTemplate = request.MessageTemplate,
+                    employeeId = Emp.EmployeeID,
+                    success = true
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send to Google Chat");
+                return StatusCode(500, new
+                {
+                    error = "Failed to send to Google Chat",
+                    message = ex.Message
+                });
+            }
+        }
 
         // POST: api/CreateTask/ScheduleTask
         [Authorize]
@@ -144,6 +179,32 @@ namespace InSync.Controllers
                 return StatusCode(500, new { error = "Failed to save webhooks URL", message = ex.Message });
             }
         }
+        [Authorize]
+        [HttpPost("SaveTelegramConfig")]
+        public async Task<IActionResult> SaveTelegramConfig([FromBody] TelegramWebhookRequest webhooksUrl)
+        {
+            try
+            {
+                if (webhooksUrl.telegramToken != null)
+                {
+                    var employee = GetLoggedInUserId();
+                    var result = await taskBusiness.SaveTelegramConfig(webhooksUrl, employee);
+
+                    return Ok(new
+                    {
+                        message = "Webhooks URL saved successfully",
+                        webhooksUrl = webhooksUrl,
+                        employeeId = employee.EmployeeID
+                    });
+                }
+                return BadRequest(new { error = "Webhooks URL cannot be null or empty" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to save webhooks URL");
+                return StatusCode(500, new { error = "Failed to save webhooks URL", message = ex.Message });
+            }
+        }
 
         [Authorize]
         [HttpGet("GetWebhooks")]
@@ -157,6 +218,33 @@ namespace InSync.Controllers
                 }
                 var employee = GetLoggedInUserId();
                 var result = await taskBusiness.GetWebhooks(employee);
+
+                return Ok(new
+                {
+                    message = "Webhooks URL saved successfully",
+                    webhooksUrl = result.Data,
+                    employeeId = employee.EmployeeID
+                });
+                return BadRequest(new { error = "Webhooks URL cannot be null or empty" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to save webhooks URL");
+                return StatusCode(500, new { error = "Failed to save webhooks URL", message = ex.Message });
+            }
+        }
+        [Authorize]
+        [HttpGet("GetTelegramConfig")]
+        public async Task<IActionResult> GetTelegramConfig()
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+                var employee = GetLoggedInUserId();
+                var result = await taskBusiness.GetTelegramConfig(employee);
 
                 return Ok(new
                 {
