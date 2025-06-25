@@ -534,20 +534,11 @@ namespace RepositoryLayer.Services
         // Method to get employee avatar URL
         private string GetEmployeeAvatarUrl(EmployeeMasterEntity emp)
         {
-            /*// Option 1: Use stored employee photo
-            if (!string.IsNullOrEmpty(emp.PhotoUrl))
-            {
-                return emp.PhotoUrl;
-            }
-*/
-            // Option 2: Use Gravatar based on email
             if (!string.IsNullOrEmpty(emp.Email))
             {
                 var emailHash = GetMD5Hash(emp.Email.ToLower().Trim());
                 return $"https://www.gravatar.com/avatar/{emailHash}?d=identicon&s=200";
             }
-
-            // Option 3: Use default avatar with initials
             return $"https://ui-avatars.com/api/?name={Uri.EscapeDataString(emp.Name ?? "User")}&background=0D8ABC&color=fff&size=200";
         }
 
@@ -566,15 +557,8 @@ namespace RepositoryLayer.Services
             try
             {
                 var TokenDetails = syncContext.TelegramToken.FirstOrDefault(w => Convert.ToInt32(w.EmployeeID) == (emp.EmployeeID));
-
-                //string token = "8160930337:AAHZ4ZqrBkTaFvfAUmsMfL0OXbrMIzBOZaI"; // move this to config
-                //string channelName = "@PekkaOfficeDiary"; // move this to config
                 ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
                 sendMessage = sendMessage.Replace("_", "\\_");
-                /*if (Debugger.IsAttached)
-                {
-                    sendMessage = "It's From local PC, " + sendMessage;
-                }*/
                 var client = new RestClient();
                 var request = new RestRequest($"https://api.telegram.org/bot{TokenDetails.TokenName}/sendMessage", Method.Post);
                 request.AddQueryParameter("parse_mode", "Markdown");
