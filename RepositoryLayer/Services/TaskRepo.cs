@@ -358,6 +358,25 @@ namespace RepositoryLayer.Services
                 throw;
             }
         }
+        public async Task<List<ScheduledTaskEntity>> GetScheduledTasks(EmployeeMasterEntity Emp)
+        {
+            try
+            {
+                var scheduledTasks = new List<ScheduledTaskEntity>();
+                scheduledTasks = syncContext.ScheduledTask.Where(i => i.EmployeeID == Emp.EmployeeID).ToList();
+                if (scheduledTasks.Count < 0)
+                {
+                    return null;
+                }
+                _logger.LogInformation($"scheduled Tasked fetched successfully and the count is :- {scheduledTasks.Count} tasks for Employee {Emp.EmployeeID}");
+                return scheduledTasks;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Failed to schedule tasks for Employee {Emp.EmployeeID}");
+                throw;
+            }
+        }
 
         private async Task<bool> CreateTasksFromRequest(StatusUpdateRequest tasks, EmployeeMasterEntity Emp)
         {

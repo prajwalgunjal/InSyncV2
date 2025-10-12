@@ -34,6 +34,10 @@ namespace BusinessLayer.Services
         {
             return taskRepository.ScheduleTaskAsync(request, Emp);
         }
+        public Task<List<ScheduledTaskEntity>> GetScheduledTasks(EmployeeMasterEntity Emp)
+        {
+            return taskRepository.GetScheduledTasks( Emp);
+        }
        /* public Task SendMessageToGoogleChat(string messageText)
         {
             return taskRepository.SendMessageToGoogleChat(messageText);
