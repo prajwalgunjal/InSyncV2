@@ -16,6 +16,7 @@ namespace BusinessLayer.Interfaces
         Task<bool> SendToTelegramAsync(StatusUpdateRequest request, EmployeeMasterEntity emp);
         Task<bool> ScheduleTaskAsync(ScheduleTaskRequest request, EmployeeMasterEntity employeeId);
         Task<List<ScheduledTaskEntity>> GetScheduledTasks( EmployeeMasterEntity employeeId);
+        Task<List<ScheduledTaskEntity>> GetPostedTasks( EmployeeMasterEntity employeeId);
         /*Task SendMessageToGoogleChat(string messageText);*/
         Task<bool> SaveWebhooksURL(WebhooksUrlRequestModel webhooks, EmployeeMasterEntity Emp);
         Task<bool> SaveTelegramConfig(TelegramWebhookRequest webhooks, EmployeeMasterEntity Emp);

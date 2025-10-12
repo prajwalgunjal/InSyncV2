@@ -310,6 +310,55 @@ namespace InSync.Controllers
                 return StatusCode(500, new { error = "Failed to retrieve scheduled tasks", message = ex.Message });
             }
         }
+        
+        [Authorize]
+        [HttpGet("GetPostedTasks")]
+        public async Task<IActionResult> GetPostedTasks()
+        {
+            try
+            {
+                var employeeId = GetLoggedInUserId();
+
+                // Check if user is authenticated and employee ID is present
+                if (employeeId != null && HttpContext.User.Identity?.IsAuthenticated == true)
+                {
+                    var scheduledTasks = await iTaskBusiness.GetScheduledTasks(employeeId);
+
+                    if (scheduledTasks != null && scheduledTasks.Any())
+                    {
+                        var formattedTasks = scheduledTasks.Select(task => new
+                        {
+                            id = task.TaskId,
+                            title = task.Title,
+                            status = task.Status,
+                            type = task.Type, // should be either "start" or "end"
+                            clickupId = task.ClickupId,
+                            additionalNotes = task.AdditionalNotes,
+                            scheduledDate = task.ScheduledDate.ToString("yyyy-MM-dd"),
+                            scheduledTime = task.ScheduledTime.ToString(@"hh\:mm"),
+                            postedAt = task.ExecutedDate
+                        });
+
+                        return Ok(new
+                        {
+                            Success = true,
+                            Data = formattedTasks,
+                            Message = "Scheduled tasks loaded successfully"
+                        });
+
+                    }
+
+                    return NotFound(new { error = "No scheduled records found for this employee." });
+                }
+
+                return Unauthorized(new { error = "User is not authenticated or employee ID not found." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to get scheduled tasks");
+                return StatusCode(500, new { error = "Failed to retrieve scheduled tasks", message = ex.Message });
+            }
+        }
         private EmployeeMasterEntity GetLoggedInUserId()
         {
             try

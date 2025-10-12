@@ -38,10 +38,14 @@ namespace BusinessLayer.Services
         {
             return taskRepository.GetScheduledTasks( Emp);
         }
-       /* public Task SendMessageToGoogleChat(string messageText)
+        public Task<List<ScheduledTaskEntity>> GetPostedTasks(EmployeeMasterEntity Emp)
         {
-            return taskRepository.SendMessageToGoogleChat(messageText);
-        }*/
+            return taskRepository.GetPostedTasks(Emp);
+        }
+        /* public Task SendMessageToGoogleChat(string messageText)
+         {
+             return taskRepository.SendMessageToGoogleChat(messageText);
+         }*/
         public async Task<bool> SaveWebhooksURL(WebhooksUrlRequestModel webhooks, EmployeeMasterEntity Emp)
         {
             return await taskRepository.SaveWebhooksURL(webhooks, Emp);

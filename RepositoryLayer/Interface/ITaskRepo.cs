@@ -16,6 +16,7 @@ namespace RepositoryLayer.Interface
         Task<bool> SendToTelegramAsync(StatusUpdateRequest request, EmployeeMasterEntity Emp);
         Task<bool> ScheduleTaskAsync(ScheduleTaskRequest request, EmployeeMasterEntity Emp);
         Task<List<ScheduledTaskEntity>> GetScheduledTasks(EmployeeMasterEntity Emp);
+        Task<List<ScheduledTaskEntity>> GetPostedTasks(EmployeeMasterEntity Emp);
         Task<bool> SaveWebhooksURL(WebhooksUrlRequestModel webhooks, EmployeeMasterEntity Emp);
         Task<bool> SaveTelegramConfig(TelegramWebhookRequest webhooks, EmployeeMasterEntity Emp);
         Task<ResponseModel<List<WebhooksUrlRequestModel>>> GetWebhooks(EmployeeMasterEntity emp);
